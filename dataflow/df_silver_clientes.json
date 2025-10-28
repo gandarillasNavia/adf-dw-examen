@@ -1,0 +1,67 @@
+{
+	"name": "df_silver_clientes",
+	"properties": {
+		"folder": {
+			"name": "Silver"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_sql_dw_clientes",
+						"type": "DatasetReference"
+					},
+					"name": "Clientes"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_sql_dw_clientes_bd",
+						"type": "DatasetReference"
+					},
+					"name": "ClientesBD"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_sql_dw_clientes_location",
+						"type": "DatasetReference"
+					},
+					"name": "ClientesLocation"
+				}
+			],
+			"sinks": [],
+			"transformations": [],
+			"scriptLines": [
+				"source(output(",
+				"          cst_id as string,",
+				"          cst_key as string,",
+				"          cst_firstname as string,",
+				"          cst_lastname as string,",
+				"          cst_marital_status as string,",
+				"          cst_gndr as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> Clientes",
+				"source(output(",
+				"          CID as string,",
+				"          BDATE as string,",
+				"          GEN as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> ClientesBD",
+				"source(output(",
+				"          CID as string,",
+				"          CNTRY as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> ClientesLocation"
+			]
+		}
+	}
+}
