@@ -24,7 +24,11 @@
 					"name": "sink1"
 				}
 			],
-			"transformations": [],
+			"transformations": [
+				{
+					"name": "aggregate1"
+				}
+			],
 			"scriptLines": [
 				"source(output(",
 				"          prd_id as string,",
@@ -39,7 +43,13 @@
 				"     isolationLevel: 'READ_UNCOMMITTED',",
 				"     query: 'SELECT DISTINCT\\n    prd_id,\\n    prd_nm,\\n    prd_cost,\\n    prd_line,\\n    CAT,\\n    MAINTENANCE\\nFROM\\n    Silver.Productos',",
 				"     format: 'query') ~> source1",
-				"source1 sink(allowSchemaDrift: true,",
+				"source1 aggregate(groupBy(prd_id),",
+				"     prd_nm = first(prd_nm),",
+				"          prd_cost = first(prd_cost),",
+				"          prd_line = first(prd_line),",
+				"          CAT = first(CAT),",
+				"          MAINTENANCE = first(MAINTENANCE)) ~> aggregate1",
+				"aggregate1 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
 				"          prd_key as string,",
