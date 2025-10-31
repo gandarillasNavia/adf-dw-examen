@@ -1,0 +1,195 @@
+{
+	"name": "df_hechos_ventas",
+	"properties": {
+		"folder": {
+			"name": "Gold"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_sql_silver_ventas",
+						"type": "DatasetReference"
+					},
+					"name": "Ventas"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_dim_cliente",
+						"type": "DatasetReference"
+					},
+					"name": "Clientes"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_dim_producto",
+						"type": "DatasetReference"
+					},
+					"name": "Productos"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_dim_fecha",
+						"type": "DatasetReference"
+					},
+					"name": "FechaOrden"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_dim_fecha",
+						"type": "DatasetReference"
+					},
+					"name": "FechaE"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ds_hechos_ventas",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "lookCliente"
+				},
+				{
+					"name": "lookupProducto"
+				},
+				{
+					"name": "lookupFecOrden"
+				},
+				{
+					"name": "cast1"
+				},
+				{
+					"name": "cast2"
+				},
+				{
+					"name": "lookupFecEntrega"
+				},
+				{
+					"name": "select1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          sls_ord_num as string,",
+				"          sls_prd_key as string,",
+				"          sls_cust_id as string,",
+				"          sls_order_dt as integer,",
+				"          sls_ship_dt as integer,",
+				"          sls_sales as integer,",
+				"          sls_quantity as integer,",
+				"          sls_price as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     query: 'SELECT DISTINCT\\n    sls_ord_num,\\n    sls_prd_key,\\n    sls_cust_id,\\n    sls_order_dt,\\n    sls_ship_dt,\\n    sls_sales,\\n    sls_quantity,\\n    sls_price\\nFROM\\n    Silver.Ventas',",
+				"     format: 'query') ~> Ventas",
+				"source(output(",
+				"          cst_id as string,",
+				"          cst_firstname as string,",
+				"          cst_lastname as string,",
+				"          cst_marital_status as string,",
+				"          cst_gndr as string,",
+				"          BDATE as date,",
+				"          CNTRY as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     query: 'SELECT DISTINCT\\n    cst_id,\\n    cst_firstname,\\n    cst_lastname,\\n    cst_marital_status,\\n    cst_gndr,\\n    BDATE,\\n    CNTRY\\nFROM\\n    Silver.Clientes',",
+				"     format: 'query') ~> Clientes",
+				"source(output(",
+				"          prd_key as string,",
+				"          prd_nm as string,",
+				"          prd_cost as string,",
+				"          prd_line as string,",
+				"          CAT as string,",
+				"          MAINTENANCE as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> Productos",
+				"source(output(",
+				"          ID_FECHA as integer,",
+				"          FECHA as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> FechaOrden",
+				"source(output(",
+				"          ID_FECHA as integer,",
+				"          FECHA as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> FechaE",
+				"Ventas, Clientes lookup(sls_cust_id == cst_id,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> lookCliente",
+				"lookCliente, Productos lookup(sls_prd_key == prd_key,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> lookupProducto",
+				"lookupProducto, cast1 lookup(sls_order_dt == FECHA,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> lookupFecOrden",
+				"FechaOrden cast(output(",
+				"          FECHA as integer",
+				"     ),",
+				"     errors: true) ~> cast1",
+				"FechaE cast(output(",
+				"          FECHA as integer",
+				"     ),",
+				"     errors: true) ~> cast2",
+				"lookupFecOrden, cast2 lookup(sls_ship_dt == cast2@FECHA,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> lookupFecEntrega",
+				"lookupFecEntrega select(mapColumn(",
+				"          sls_ord_num,",
+				"          sls_prd_key,",
+				"          sls_cust_id,",
+				"          sls_order_dt = cast1@FECHA,",
+				"          sls_ship_dt = cast2@FECHA,",
+				"          sls_sales,",
+				"          sls_quantity,",
+				"          sls_price",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"select1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          sls_ord_num,",
+				"          sls_prd_key,",
+				"          sls_cust_id,",
+				"          sls_order_dt,",
+				"          sls_ship_dt,",
+				"          sls_sales,",
+				"          sls_quantity,",
+				"          sls_price",
+				"     )) ~> sink1"
+			]
+		}
+	}
+}

@@ -1,0 +1,44 @@
+{
+	"name": "ds_dim_producto",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sql_dw_examen",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Gold"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "prd_key",
+				"type": "nvarchar"
+			},
+			{
+				"name": "prd_nm",
+				"type": "nvarchar"
+			},
+			{
+				"name": "prd_cost",
+				"type": "nvarchar"
+			},
+			{
+				"name": "prd_line",
+				"type": "nvarchar"
+			},
+			{
+				"name": "CAT",
+				"type": "nvarchar"
+			},
+			{
+				"name": "MAINTENANCE",
+				"type": "nvarchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "Gold",
+			"table": "Dim_Producto"
+		}
+	}
+}

@@ -1,0 +1,19 @@
+{
+	"name": "ds_hechos_ventas",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sql_dw_examen",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Gold"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "Gold",
+			"table": "hechos_ventas"
+		}
+	}
+}

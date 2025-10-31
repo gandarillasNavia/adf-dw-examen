@@ -1,0 +1,71 @@
+{
+	"name": "df_dim_productos",
+	"properties": {
+		"folder": {
+			"name": "Gold"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_sql_silver_productos",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ds_dim_producto",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [],
+			"scriptLines": [
+				"source(output(",
+				"          prd_id as string,",
+				"          prd_nm as string,",
+				"          prd_cost as string,",
+				"          prd_line as string,",
+				"          CAT as string,",
+				"          MAINTENANCE as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     query: 'SELECT DISTINCT\\n    prd_id,\\n    prd_nm,\\n    prd_cost,\\n    prd_line,\\n    CAT,\\n    MAINTENANCE\\nFROM\\n    Silver.Productos',",
+				"     format: 'query') ~> source1",
+				"source1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          prd_key as string,",
+				"          prd_nm as string,",
+				"          prd_cost as string,",
+				"          prd_line as string,",
+				"          CAT as string,",
+				"          MAINTENANCE as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          prd_key = prd_id,",
+				"          prd_nm,",
+				"          prd_cost,",
+				"          prd_line,",
+				"          CAT,",
+				"          MAINTENANCE",
+				"     )) ~> sink1"
+			]
+		}
+	}
+}

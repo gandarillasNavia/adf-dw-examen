@@ -1,0 +1,57 @@
+{
+	"name": "df_dim_fecha",
+	"properties": {
+		"folder": {
+			"name": "Gold"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_sql_silver_ventas",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ds_dim_fecha",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [],
+			"scriptLines": [
+				"source(output(",
+				"          FECHA_TEXTO as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     query: 'SELECT DISTINCT FECHA_TEXTO FROM (\\n    SELECT\\n        CONVERT(NVARCHAR(10), sls_order_dt, 120) AS FECHA_TEXTO\\n    FROM\\n        Silver.Ventas\\n    UNION\\n    SELECT\\n        CONVERT(NVARCHAR(10), sls_ship_dt, 120) AS FECHA_TEXTO\\n    FROM\\n        Silver.Ventas\\n) AS FechasUnicas\\nWHERE FECHA_TEXTO IS NOT NULL\\n',",
+				"     format: 'query') ~> source1",
+				"source1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          ID_FECHA as integer,",
+				"          FECHA as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          FECHA = FECHA_TEXTO",
+				"     )) ~> sink1"
+			]
+		}
+	}
+}
